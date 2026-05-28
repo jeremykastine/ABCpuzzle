@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ABC Puzzle Activity — Part 2: Computer-Assisted Practice</title>
+<style>
+  :root { --ink:#1f2937; --muted:#5b6472; --line:#d9dee7; --soft:#f6f8fb; --accent:#253f72; --accent2:#eef3ff; --good:#edf7ed; }
+  body { font-family: Arial, Helvetica, sans-serif; color: var(--ink); line-height: 1.5; margin: 0; background: white; }
+  main { max-width: 960px; margin: 0 auto; padding: 32px 22px 56px; }
+  h1 { color: var(--accent); font-size: 2rem; margin: 0 0 4px; }
+  h2 { color: var(--accent); margin-top: 28px; border-bottom: 2px solid var(--line); padding-bottom: 4px; }
+  h3 { margin-top: 18px; }
+  .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 22px; }
+  .box { background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 14px 0; }
+  .assignment { background: var(--accent2); border-left: 6px solid var(--accent); }
+  .success { background: var(--good); }
+  code, .string { font-family: Consolas, Monaco, 'Courier New', monospace; font-weight: 700; letter-spacing: .04em; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 18px; }
+  th, td { border: 1px solid var(--line); padding: 9px; vertical-align: top; }
+  th { background: var(--soft); text-align: left; }
+  a.button { display: inline-block; padding: 7px 10px; border-radius: 8px; background: var(--accent); color: white; text-decoration: none; font-weight: 700; white-space: nowrap; }
+  a.button:hover { filter: brightness(1.1); }
+  .small { color: var(--muted); font-size: .93rem; }
+  .todo li { margin-bottom: 8px; }
+  .footer-note { margin-top: 32px; color: var(--muted); font-size: .95rem; }
+  @media print { main { padding: 18px; } .box { break-inside: avoid; } a.button { color: var(--ink); background: transparent; border: 1px solid var(--ink); } }
+</style>
+</head>
+<body>
+<main>
+  <h1>ABC Puzzle Activity</h1>
+  <div class="subtitle">Part 2: Computer-assisted practice</div>
+
+  <div class="box assignment">
+    <strong>What to submit:</strong> Use the ABC Puzzle tool to solve at least one puzzle. When you have a solved puzzle on the screen, take a screenshot showing all <span class="string">C</span>s. Email that screenshot to your instructor. The URL should show which level and starting string you used.
+  </div>
+
+  <h2>1. Reminder of the rules</h2>
+  <ol>
+    <li><strong>Replacement rule:</strong> Any <span class="string">AB</span> may be replaced with <span class="string">C</span>. Any <span class="string">C</span> may be replaced with <span class="string">AB</span>.</li>
+    <li><strong>Swap-around-C rule:</strong> Equal-length strings immediately before and after a <span class="string">C</span> may be swapped.</li>
+  </ol>
+  <p>Today’s strings are longer than the paper strings from Part 1. The computer tool makes it easier to try many moves, undo mistakes, and explore patterns.</p>
+
+  <h2>2. Why use a computer for this?</h2>
+  <p>Computers are especially good at manipulating sequences of symbols. This is part of what happens in many areas of computing: a word processor manipulates text, a compiler manipulates programming-language symbols, a search engine manipulates strings of characters, and a symbolic algebra system manipulates mathematical expressions.</p>
+  <p>The ABC Puzzle is much simpler than those real applications, but the basic idea is related: we have a string, we have rules, and we want to know what can be reached by applying those rules. A computer lets us test moves quickly and explore a larger “space” of possibilities than we could comfortably explore by hand.</p>
+
+  <div class="box success">
+    <strong>Strategy suggestion:</strong> Do not just click randomly. Try to create useful <span class="string">C</span>s, then use those <span class="string">C</span>s as pivot points for swaps. If you get stuck, sometimes expanding a <span class="string">C</span> back into <span class="string">AB</span> can open a new path.
+  </div>
+
+  <h2>3. Practice puzzles</h2>
+  <p>Click a puzzle link to open the ABC Puzzle tool in a new tab. Some puzzles are straightforward, some are difficult, and some may not be solvable. Your required submission is a screenshot of at least one solved puzzle showing all <span class="string">C</span>s.</p>
+
+  <table>
+    <thead>
+      <tr><th>#</th><th>Starting string</th><th>Estimated time</th><th>Challenge level</th><th>Open puzzle</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>1</td><td><span class="string">AAABBB</span></td><td>3–5 minutes</td><td>Warm-up</td><td><a class="button" target="_blank" href="abc_puzzle_tool.html?level=part2-1&start=AAABBB">Open</a></td></tr>
+      <tr><td>2</td><td><span class="string">AABABB</span></td><td>5–8 minutes</td><td>Moderate</td><td><a class="button" target="_blank" href="abc_puzzle_tool.html?level=part2-2&start=AABABB">Open</a></td></tr>
+      <tr><td>3</td><td><span class="string">AAAABBBB</span></td><td>8–12 minutes</td><td>Moderate</td><td><a class="button" target="_blank" href="abc_puzzle_tool.html?level=part2-3&start=AAAABBBB">Open</a></td></tr>
+      <tr><td>4</td><td><span class="string">ABAABBAB</span></td><td>8–12 minutes</td><td>Tricky</td><td><a class="button" target="_blank" href="abc_puzzle_tool.html?level=part2-4&start=ABAABBAB">Open</a></td></tr>
+      <tr><td>5</td><td><span class="string">BAABABAB</span></td><td>10–15 minutes</td><td>Tricky</td><td><a class="button" target="_blank" href="abc_puzzle_tool.html?level=part2-5&start=BAABABAB">Open</a></td></tr>
+      <tr><td>6</td><td><span class="string">AAAAABBBBB</span></td><td>12–18 minutes</td><td>Long but approachable</td><td><a class="button" target="_blank" href="abc_puzzle_tool.html?level=part2-6&start=AAAAABBBBB">Open</a></td></tr>
+      <tr><td>7</td><td><span class="string">ABBBBAAAAB</span></td><td>10–20 minutes</td><td>Possibly impossible</td><td><a class="button" target="_blank" href="abc_puzzle_tool.html?level=part2-7&start=ABBBBAAAAB">Open</a></td></tr>
+      <tr><td>8</td><td><span class="string">AAABBABBAB</span></td><td>15–20 minutes</td><td>Challenge</td><td><a class="button" target="_blank" href="abc_puzzle_tool.html?level=part2-8&start=AAABBABBAB">Open</a></td></tr>
+      <tr><td>9</td><td><span class="string">BBBAAAAB</span></td><td>8–15 minutes</td><td>Possibly impossible</td><td><a class="button" target="_blank" href="abc_puzzle_tool.html?level=part2-9&start=BBBAAAAB">Open</a></td></tr>
+      <tr><td>10</td><td><span class="string">AAAABBABBB</span></td><td>15–20 minutes</td><td>Challenge</td><td><a class="button" target="_blank" href="abc_puzzle_tool.html?level=part2-10&start=AAAABBABBB">Open</a></td></tr>
+    </tbody>
+  </table>
+
+  <h2>4. Optional thinking questions</h2>
+  <p>After you have worked on the puzzles, think about these questions. You do not need to write formal answers unless your instructor asks for them later.</p>
+  <ol>
+    <li>What kinds of starting strings seemed easiest?</li>
+    <li>What kinds of starting strings seemed to get stuck?</li>
+    <li>When did it help to turn a <span class="string">C</span> back into <span class="string">AB</span>?</li>
+    <li>If you were programming the computer to search for a solution automatically, how would it decide which move to try next?</li>
+  </ol>
+
+  <div class="box">
+    <strong>Suggested pacing for one hour:</strong> Spend about 10 minutes reading the reminders and side notes. Spend about 45–50 minutes working in the tool. Make sure to leave a few minutes at the end to take and email your screenshot.
+  </div>
+
+  <h2>5. Final reminder</h2>
+  <ul class="todo">
+    <li>Solve at least one puzzle in the ABC Puzzle tool.</li>
+    <li>Take a screenshot showing all <span class="string">C</span>s.</li>
+    <li>Email the screenshot to your instructor.</li>
+    <li>You may continue trying other puzzles, including the ones that may not be solvable.</li>
+  </ul>
+
+  <p class="footer-note">Instructor note: these links assume the tool file is named <span class="string">abc_puzzle_tool.html</span> and can read <span class="string">level</span> and <span class="string">start</span> from the URL. If your tool file has a different name, edit the link addresses before posting this page.</p>
+</main>
+</body>
+</html>

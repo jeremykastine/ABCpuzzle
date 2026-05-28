@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ABC Puzzle</title>
+<style>
+  :root{
+    --ink:#5f5f5f;
+    --line:#d8d8d8;
+  }
+  html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:white;color:#222;}
+  .app{min-height:100vh;display:flex;flex-direction:column;}
+  .intro{border-bottom:1px solid var(--line);background:#fff;padding:14px 18px;line-height:1.4;}
+  h1{font-size:20px;margin:0 0 8px 0;font-weight:700;}
+  .intro p{font-size:14px;margin:6px 0;max-width:980px;color:#333;}
+  code{font-family:Consolas,Monaco,"Courier New",monospace;font-size:.95em;}
+  .main{position:relative;flex:1;overflow:auto;min-height:360px;}
+  canvas{display:block;background:white;}
+  .floating-menu{position:absolute;z-index:10;background:#fff;border:1px solid #bbb;border-radius:8px;box-shadow:0 6px 22px rgba(0,0,0,.18);padding:8px;min-width:230px;max-width:340px;}
+  .floating-menu.hidden{display:none;}
+  .tool-grid{display:grid;gap:7px;}
+  .tool-grid button{text-align:left;font-size:13px;padding:7px 8px;border:1px solid #999;background:#fff;border-radius:4px;cursor:pointer;}
+  .tool-grid button:disabled{color:#aaa;background:#f4f4f4;border-color:#ccc;cursor:default;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="intro">
+    <h1>ABC Puzzle</h1>
+    <p>Goal: turn all <code>A</code>s and <code>B</code>s into <code>C</code>s. Drag across a substring below; only legal moves for that selection will appear.</p>
+    <p>Rules: <code>AB ↔ C</code>, and <code>XCY ↔ YCX</code> when <code>X</code> and <code>Y</code> have the same length.</p>
+  </div>
+
+  <div id="main" class="main">
+    <canvas id="canvas"></canvas>
+    <div id="menu" class="floating-menu hidden"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('canvas');
+  const ctx = canvas.getContext('2d');
+  const main = document.getElementById('main');
+  const menu = document.getElementById('menu');
+
+  const settings = {
+    marginX: 34,
+    marginY: 72,
+    charW: 54,
+    charH: 62,
+    gap: 10,
+    font: 'bold 28px Arial',
+    ink: 'rgb(95,95,95)',
+    previewMs: 650,
+    postviewMs: 650
+  };
+
+  function initialFromQuery(){
+    const defaultSeq = 'AAAABBBB';
+    const params = new URLSearchParams(window.location.search);
+    const raw = params.get('seq') ?? params.get('s') ?? params.get('initial') ?? params.get('string');
+    const cleaned = typeof raw === 'string' ? raw.trim().toUpperCase() : '';
+
+    if(!/^[ABC]+$/.test(cleaned)){
+      const url = new URL(window.location.href);
+      url.search = '';
+      url.searchParams.set('seq', defaultSeq);
+      window.location.replace(url.toString());
+      return defaultSeq;
+    }
+
+    return cleaned;
+  }
+
+  let state = {
+    start: initialFromQuery(),
+    s: initialFromQuery(),
+    boxes: [],
+    history: [],
+    selection: null,
+    drag: null,
+    preview: null,
+    postview: null,
+    timer: null
+  };
+
+  function goalString(){
+    const abCount = (state.start.match(/[AB]/g)||[]).length;
+    const cCount = (state.start.match(/C/g)||[]).length;
+    return 'C'.repeat(Math.floor(abCount / 2) + cCount || 1);
+  }
+
+  function isSolved(){
+    return /^[C]+$/.test(state.s) && state.s.length === goalString().length;
+  }
+
+  function resizeCanvas(){
+    const width = Math.max(main.clientWidth, settings.marginX*2 + state.s.length*(settings.charW+settings.gap) + 80);
+    const height = Math.max(main.clientHeight, 320);
+    if(canvas.width !== width || canvas.height !== height){
+      canvas.width = width;
+      canvas.height = height;
+    }
+  }
+
+  function layout(){
+    state.boxes = [];
+    let x = settings.marginX;
+    for(let i=0;i<state.s.length;i++){
+      state.boxes.push({x, y: settings.marginY, w: settings.charW, h: settings.charH});
+      x += settings.charW + settings.gap;
+    }
+  }
+
+  function drawRoundedRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.lineTo(x+w-r,y);
+    ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+    ctx.lineTo(x+w,y+h-r);
+    ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    ctx.lineTo(x+r,y+h);
+    ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+    ctx.lineTo(x,y+r);
+    ctx.quadraticCurveTo(x,y,x+r,y);
+    ctx.closePath();
+  }
+
+  function regionForRange(start, end){
+    const a = state.boxes[start];
+    const b = state.boxes[end];
+    return {x:a.x-5, y:a.y-5, w:(b.x+b.w)-(a.x)+10, h:a.h+10};
+  }
+
+  function fillRegion(start,end,color){
+    if(start < 0 || end < start || end >= state.boxes.length) return;
+    const r = regionForRange(start,end);
+    ctx.save();
+    ctx.fillStyle = color;
+    drawRoundedRect(r.x,r.y,r.w,r.h,10);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function strokeRegion(start,end,color,width=3){
+    if(start < 0 || end < start || end >= state.boxes.length) return;
+    const r = regionForRange(start,end);
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    drawRoundedRect(r.x,r.y,r.w,r.h,10);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function draw(){
+    resizeCanvas();
+    layout();
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    if(state.selection) fillRegion(state.selection.start, state.selection.end, 'rgba(80,140,255,.25)');
+
+    const overlay = state.preview || state.postview;
+    if(overlay && overlay.regions){
+      overlay.regions.forEach(r => fillRegion(r.start, r.end, r.color));
+      overlay.regions.forEach(r => strokeRegion(r.start, r.end, r.stroke || 'rgba(0,0,0,.35)', 2));
+    }
+
+    ctx.save();
+    ctx.font = settings.font;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    for(let i=0;i<state.s.length;i++){
+      const b = state.boxes[i];
+      ctx.strokeStyle = '#cfcfcf';
+      ctx.lineWidth = 1;
+      drawRoundedRect(b.x,b.y,b.w,b.h,8);
+      ctx.stroke();
+      ctx.fillStyle = settings.ink;
+      ctx.fillText(state.s[i], b.x + b.w/2, b.y + b.h/2);
+    }
+    ctx.restore();
+
+    if(state.drag){
+      ctx.save();
+      ctx.strokeStyle = 'blue';
+      ctx.lineWidth = 1;
+      const x = Math.min(state.drag.x1,state.drag.x2);
+      const y = Math.min(state.drag.y1,state.drag.y2);
+      const w = Math.abs(state.drag.x2-state.drag.x1);
+      const h = Math.abs(state.drag.y2-state.drag.y1);
+      ctx.strokeRect(x,y,w,h);
+      ctx.restore();
+    }
+  }
+
+  function selectionText(){
+    if(!state.selection) return '';
+    return state.s.slice(state.selection.start, state.selection.end+1);
+  }
+
+  function toolsForSelection(){
+    if(!state.selection) return [];
+    const text = selectionText();
+    const tools = [];
+    if(text === 'AB') tools.push({id:'abToC', label:'Replace AB with C'});
+    if(text === 'C') tools.push({id:'cToAB', label:'Expand C to AB'});
+    if(canSwapSelected()) tools.push({id:'swapAroundC', label:'Swap equal strings around C'});
+    return tools;
+  }
+
+  function canSwapSelected(){
+    if(!state.selection) return false;
+    const text = selectionText();
+    if(text.length < 3 || text.length % 2 === 0) return false;
+    const mid = Math.floor(text.length/2);
+    return text[mid] === 'C';
+  }
+
+  function selectedSwapData(){
+    if(!canSwapSelected()) return null;
+    const start = state.selection.start;
+    const end = state.selection.end;
+    const mid = Math.floor((start+end)/2);
+    return {start, mid, end};
+  }
+
+  function hideMenu(){ menu.classList.add('hidden'); menu.innerHTML = ''; }
+
+  function showMenu(){
+    if(!state.selection){ hideMenu(); return; }
+    const tools = toolsForSelection();
+    if(tools.length === 0){ hideMenu(); return; }
+
+    let html = `<div class="tool-grid">`;
+    tools.forEach((t,idx)=>{
+      html += `<button data-tool="${t.id}" ${idx===0?'autofocus':''}>${escapeHtml(t.label)}</button>`;
+    });
+    html += `</div>`;
+
+    menu.innerHTML = html;
+    const r = regionForRange(state.selection.start,state.selection.end);
+    menu.style.left = Math.min(r.x + r.w + 8, Math.max(20, canvas.width - 360)) + 'px';
+    menu.style.top = (r.y + r.h + 8) + 'px';
+    menu.classList.remove('hidden');
+    menu.querySelectorAll('button[data-tool]').forEach(btn => btn.addEventListener('click', () => runTool(btn.dataset.tool)));
+    const first = menu.querySelector('button[data-tool]');
+    if(first) first.focus();
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function pushHistory(){ state.history.push(state.s); }
+  function clearTimers(){ if(state.timer) clearTimeout(state.timer); state.timer = null; }
+
+  function withAnimation(preview, transform, postviewBuilder){
+    clearTimers();
+    hideMenu();
+    state.preview = preview;
+    state.postview = null;
+    draw();
+    state.timer = setTimeout(() => {
+      pushHistory();
+      transform();
+      state.preview = null;
+      state.postview = postviewBuilder ? postviewBuilder() : null;
+      state.selection = null;
+      draw();
+      state.timer = setTimeout(() => {
+        state.postview = null;
+        state.timer = null;
+        if(isSolved()) setMessage('Solved. The string has been reduced to all C symbols.');
+        else setMessage('');
+        draw();
+      }, settings.postviewMs);
+    }, settings.previewMs);
+  }
+
+  function replaceRange(s,start,end,replacement){
+    return s.slice(0,start) + replacement + s.slice(end+1);
+  }
+
+  function runTool(id){
+    if(!state.selection) return;
+    const sel = {...state.selection};
+    if(id === 'abToC'){
+      withAnimation({label:'Preview: AB will collapse into C.', regions:[{start:sel.start,end:sel.end,color:'rgba(25,160,80,.25)',stroke:'rgb(25,160,80)'}]},
+        () => { state.s = replaceRange(state.s, sel.start, sel.end, 'C'); },
+        () => ({label:'Postview: new C created.', regions:[{start:sel.start,end:sel.start,color:'rgba(25,160,80,.25)',stroke:'rgb(25,160,80)'}]}));
+    }
+    if(id === 'cToAB'){
+      withAnimation({label:'Preview: C will expand into AB.', regions:[{start:sel.start,end:sel.end,color:'rgba(220,140,20,.22)',stroke:'rgb(180,110,20)'}]},
+        () => { state.s = replaceRange(state.s, sel.start, sel.end, 'AB'); },
+        () => ({label:'Postview: C expanded to AB.', regions:[{start:sel.start,end:sel.start+1,color:'rgba(220,140,20,.22)',stroke:'rgb(180,110,20)'}]}));
+    }
+    if(id === 'swapAroundC'){
+      const d = selectedSwapData();
+      const X = state.s.slice(d.start,d.mid);
+      const Y = state.s.slice(d.mid+1,d.end+1);
+      const newSub = Y + 'C' + X;
+      const len = X.length;
+      withAnimation({label:'Preview: X C Y will become Y C X.', regions:[
+          {start:d.start,end:d.mid-1,color:'rgba(255,196,40,.35)',stroke:'rgb(190,135,0)'},
+          {start:d.mid,end:d.mid,color:'rgba(80,190,255,.35)',stroke:'rgb(0,130,190)'},
+          {start:d.mid+1,end:d.end,color:'rgba(255,90,170,.30)',stroke:'rgb(190,50,120)'}
+        ]},
+        () => { state.s = replaceRange(state.s, d.start, d.end, newSub); },
+        () => ({label:'Postview: Y C X after the swap.', regions:[
+          {start:d.start,end:d.start+len-1,color:'rgba(255,90,170,.30)',stroke:'rgb(190,50,120)'},
+          {start:d.start+len,end:d.start+len,color:'rgba(80,190,255,.35)',stroke:'rgb(0,130,190)'},
+          {start:d.start+len+1,end:d.end,color:'rgba(255,196,40,.35)',stroke:'rgb(190,135,0)'}
+        ]}));
+    }
+  }
+
+  canvas.addEventListener('mousedown', e => {
+    clearTimers();
+    state.preview = null; state.postview = null;
+    hideMenu();
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    state.drag = {x1:x,y1:y,x2:x,y2:y};
+    state.selection = null;
+    draw();
+  });
+
+  canvas.addEventListener('mousemove', e => {
+    if(!state.drag) return;
+    const rect = canvas.getBoundingClientRect();
+    state.drag.x2 = e.clientX - rect.left;
+    state.drag.y2 = e.clientY - rect.top;
+    const x1 = Math.min(state.drag.x1,state.drag.x2), x2 = Math.max(state.drag.x1,state.drag.x2);
+    const y1 = Math.min(state.drag.y1,state.drag.y2), y2 = Math.max(state.drag.y1,state.drag.y2);
+    const hits = [];
+    state.boxes.forEach((b,i)=>{
+      if(!(b.x+b.w < x1 || b.x > x2 || b.y+b.h < y1 || b.y > y2)) hits.push(i);
+    });
+    if(hits.length){ state.selection = {start:Math.min(...hits), end:Math.max(...hits)}; }
+    else { state.selection = null; }
+    draw();
+  });
+
+  window.addEventListener('mouseup', () => {
+    if(!state.drag) return;
+    state.drag = null;
+    draw();
+    if(state.selection){
+      const tools = toolsForSelection();
+      showMenu();
+    } else {
+      hideMenu();
+    }
+  });
+
+  document.addEventListener('keydown', e => {
+    if(e.key === 'Escape'){
+      state.selection = null; hideMenu(); setMessage('Selection cleared.'); draw();
+    }
+    if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z'){
+      if(state.history.length){
+        clearTimers();
+        state.s = state.history.pop();
+        state.selection = null; state.preview = null; state.postview = null; hideMenu(); draw();
+      }
+    }
+    if(e.key === 'Enter' && state.selection && !menu.classList.contains('hidden')){
+      const first = menu.querySelector('button[data-tool]');
+      if(first){ e.preventDefault(); runTool(first.dataset.tool); }
+    }
+  });
+
+  window.addEventListener('resize', draw);
+  draw();
+})();
+</script>
+</body>
+</html>

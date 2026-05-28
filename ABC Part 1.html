@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>ABC Puzzle Activity — Part 1: Formal Systems on Paper</title>
+<style>
+  :root {
+    --ink:#1f2937; --muted:#5b6472; --line:#d9dee7; --soft:#f6f8fb;
+    --accent:#253f72; --accent2:#eef3ff;
+    --m1:#fff2a8; --m2:#c7f0d8; --m3:#cfe3ff; --m4:#ffd6c9; --m5:#ead6ff; --m6:#d8f3f6;
+  }
+  body { font-family: Arial, Helvetica, sans-serif; color: var(--ink); line-height: 1.5; margin: 0; background: white; }
+  main { max-width: 980px; margin: 0 auto; padding: 32px 22px 56px; }
+  h1 { color: var(--accent); font-size: 2rem; margin: 0 0 4px; }
+  h2 { color: var(--accent); margin-top: 28px; border-bottom: 2px solid var(--line); padding-bottom: 4px; }
+  h3 { margin-top: 22px; color:#26364d; }
+  .subtitle { color: var(--muted); font-size: 1.05rem; margin-bottom: 22px; }
+  .box { background: var(--soft); border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; margin: 14px 0; }
+  .assignment { background: var(--accent2); border-left: 6px solid var(--accent); }
+  code, .string, .seq { font-family: Consolas, Monaco, 'Courier New', monospace; font-weight: 700; letter-spacing: .04em; white-space: nowrap; }
+  .seq { font-size: 1.1rem; }
+  table { width: 100%; border-collapse: collapse; margin: 12px 0 22px; }
+  th, td { border: 1px solid var(--line); padding: 9px 10px; vertical-align: top; }
+  th { background: var(--soft); text-align: left; }
+  .small { color: var(--muted); font-size: .93rem; }
+  .todo li { margin-bottom: 8px; }
+  .footer-note { margin-top: 32px; color: var(--muted); font-size: .95rem; }
+  .one-step td:first-child, .one-step td:nth-child(2), .work td:first-child, .work td:nth-child(2) { width: 28%; }
+  .original-row td { background:#fbfcff; font-weight:700; }
+  .m1 { background: var(--m1); border-radius: 4px; padding: 0 1px; }
+  .m2 { background: var(--m2); border-radius: 4px; padding: 0 1px; }
+  .m3 { background: var(--m3); border-radius: 4px; padding: 0 1px; }
+  .m4 { background: var(--m4); border-radius: 4px; padding: 0 1px; }
+  .m5 { background: var(--m5); border-radius: 4px; padding: 0 1px; }
+  .m6 { background: var(--m6); border-radius: 4px; padding: 0 1px; }
+
+  .solution-path th:first-child { width: 36%; }
+  .solution-path th:nth-child(2) { width: 64%; }
+  .solution-path td { height: 2.4rem; vertical-align: middle; }
+  .official-step { background:#fbfcff; font-weight:700; }
+  .preview-cell { background:#fff; }
+  .move-card { background:#fff; line-height: 1.7; }
+  .move-name { font-weight: 700; color: var(--accent); margin-bottom: 3px; }
+  .move-card div + div { margin-top: 2px; }
+  .empty-cell { background:#fff; border-color: var(--line); }
+  @media print { main { padding: 18px; } .box, table { break-inside: avoid; } a { color: inherit; } }
+
+  .move-preview-line { text-align: center; margin-top: 2px; }
+  .move-preview-line .seq { display: inline-block; }
+  .one-step th:first-child { width: 45%; }
+  .one-step th:nth-child(2) { width: 55%; }
+  .one-step .move-stack { text-align: center; line-height: 1.8; }
+  .one-step .move-stack .seq { display: block; }
+</style>
+</head>
+<body>
+<main>
+<h1>ABC Puzzle Activity</h1>
+<div class="subtitle">Part 1: Formal systems on paper</div>
+<div class="box assignment">
+<strong>What to submit:</strong> Fill a page or two with your attempts to solve the puzzles below. Your work may just look like many lines of strings made from <span class="string">A</span>s, <span class="string">B</span>s, and <span class="string">C</span>s. Take a clear picture of your written work and email it to your instructor. I will not be grading every line carefully; I am mainly interested in seeing what you tried and what you were able to accomplish.
+  </div>
+<h2>1. What is a formal system?</h2>
+<p>A <strong>formal system</strong> is a system where we begin with symbols and rules for changing one arrangement of symbols into another. The rules are meant to be followed exactly. In a formal system, we do not rely on what the symbols “feel like” they mean. We ask: <em>What strings can be produced by following the rules?</em></p>
+<p>Formal systems are important in mathematics because algebra itself can be viewed as rule-based symbol manipulation. When you simplify an expression, solve an equation, or factor a polynomial, you are following rules that say which transformations are allowed.</p>
+<p>Formal systems also show up in other areas of inquiry. In logic, they help people study valid arguments. In computer science, they help describe programming languages and algorithms. In linguistics, they can model grammar. In philosophy and mathematics, they have been used to ask deep questions about proof, meaning, and what can or cannot be computed.</p>
+<h2>2. The ABC Puzzle</h2>
+<p>In this activity, the only symbols are <span class="string">A</span>, <span class="string">B</span>, and <span class="string">C</span>. You will start with a string that has the same number of <span class="string">A</span>s and <span class="string">B</span>s. Your goal is to turn the whole string into all <span class="string">C</span>s.</p>
+<div class="box">
+<h3>The two rules</h3>
+<ol>
+<li><strong>Replacement rule:</strong> Any <span class="string">AB</span> may be replaced with <span class="string">C</span>. Also, any <span class="string">C</span> may be replaced with <span class="string">AB</span>.</li>
+<li><strong>Swap-around-C rule:</strong> If a <span class="string">C</span> has a string of symbols immediately before it and a string of the same length immediately after it, those two strings may be swapped.</li>
+</ol>
+</div>
+<h3>Single-step examples of legal moves</h3>
+<p>In each row below, only the highlighted part changes. There are no spaces inside the strings; the highlighting is just there to focus your attention.</p>
+<table class="one-step">
+<thead><tr><th>Move</th><th>Why this move is allowed</th></tr></thead>
+<tbody>
+<tr><td><div class="move-stack"><div><span class="seq">BA<span class="m1">AB</span>CBAC</span></div><div><span class="seq">BA<span class="m1">C</span>CBAC</span></div></div></td><td>Replace the highlighted <span class="string">AB</span> with <span class="string">C</span>.</td></tr>
+<tr><td><div class="move-stack"><div><span class="seq">BACBA<span class="m2">C</span>BBC</span></div><div><span class="seq">BACBA<span class="m2">AB</span>BBC</span></div></div></td><td>Replace the highlighted <span class="string">C</span> with <span class="string">AB</span>.</td></tr>
+<tr><td><div class="move-stack"><div><span class="seq">BAB<span class="m3">ACC</span>BAB</span></div><div><span class="seq">BAB<span class="m3">CCA</span>BAB</span></div></div></td><td>Swap one letter on the left of the middle <span class="string">C</span> with one letter on the right. Here, the right-hand letter being swapped is itself another <span class="string">C</span>.</td></tr>
+<tr><td><div class="move-stack"><div><span class="seq">B<span class="m4">ABCCBCA</span>AB</span></div><div><span class="seq">B<span class="m4">BCACABC</span>AB</span></div></div></td><td>Swap three letters on the left of the middle <span class="string">C</span> with three letters on the right. The three-letter pieces are <span class="string">ABC</span> and <span class="string">BCA</span>, so they include a mixture of symbols.</td></tr>
+</tbody>
+</table>
+<h2>3. Worked examples</h2>
+<p>These examples show solution paths. The left column lists the official steps. The right column alternates with it: each move appears as a transformation card showing the highlighted change.</p>
+<h3>Example 1: Solving <span class="string">AAABBB</span></h3>
+<table class="solution-path alternating-path">
+<thead>
+<tr><th>Steps</th><th>Transformations</th></tr>
+</thead>
+<tbody>
+<tr>
+<td class="official-step"><span class="seq">AAABBB</span></td>
+<td class="empty-cell"></td>
+</tr>
+<tr>
+<td class="empty-cell"></td>
+<td class="move-card"><div class="move-name">Exchange <span class="string">AB</span> for <span class="string">C</span></div><div class="move-preview-line"><span class="seq">AA<span class="m1">AB</span>BB</span></div><div class="move-preview-line"><span class="seq">AA<span class="m1">C</span>BB</span></div></td>
+</tr>
+<tr>
+<td class="official-step"><span class="seq">AACBB</span></td>
+<td class="empty-cell"></td>
+</tr>
+<tr>
+<td class="empty-cell"></td>
+<td class="move-card"><div class="move-name">Swap one letter on the left with one letter on the right</div><div class="move-preview-line"><span class="seq">A<span class="m2">ACB</span>B</span></div><div class="move-preview-line"><span class="seq">A<span class="m2">BCA</span>B</span></div></td>
+</tr>
+<tr>
+<td class="official-step"><span class="seq">ABCAB</span></td>
+<td class="empty-cell"></td>
+</tr>
+<tr>
+<td class="empty-cell"></td>
+<td class="move-card"><div class="move-name">Exchange <span class="string">AB</span> for <span class="string">C</span></div><div class="move-preview-line"><span class="seq"><span class="m3">AB</span>CAB</span></div><div class="move-preview-line"><span class="seq"><span class="m3">C</span>CAB</span></div></td>
+</tr>
+<tr>
+<td class="official-step"><span class="seq">CCAB</span></td>
+<td class="empty-cell"></td>
+</tr>
+<tr>
+<td class="empty-cell"></td>
+<td class="move-card"><div class="move-name">Exchange <span class="string">AB</span> for <span class="string">C</span></div><div class="move-preview-line"><span class="seq">CC<span class="m4">AB</span></span></div><div class="move-preview-line"><span class="seq">CC<span class="m4">C</span></span></div></td>
+</tr>
+<tr>
+<td class="official-step"><span class="seq">CCC</span></td>
+<td class="empty-cell"></td>
+</tr>
+</tbody>
+</table>
+<h3>Example 2: A longer example where turning <span class="string">C</span> back into <span class="string">AB</span> helps</h3>
+<p>This one is intentionally more complicated. You are not expected to discover a route this long immediately. The point is to show that the rules can interact in surprising ways.</p>
+<table class="solution-path alternating-path">
+<thead>
+<tr><th>Steps</th><th>Transformations</th></tr>
+</thead>
+<tbody>
+<tr><td class="official-step"><span class="seq">AABBAABB</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Exchange <span class="string">AB</span> for <span class="string">C</span></div><div class="move-preview-line"><span class="seq">AABBA<span class="m1">AB</span>B</span></div><div class="move-preview-line"><span class="seq">AABBA<span class="m1">C</span>B</span></div></td></tr>
+<tr><td class="official-step"><span class="seq">AABBACB</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Swap one letter on the left with one letter on the right</div><div class="move-preview-line"><span class="seq">AABB<span class="m2">ACB</span></span></div><div class="move-preview-line"><span class="seq">AABB<span class="m2">BCA</span></span></div></td></tr>
+<tr><td class="official-step"><span class="seq">AABBBCA</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Exchange <span class="string">AB</span> for <span class="string">C</span></div><div class="move-preview-line"><span class="seq">A<span class="m3">AB</span>BBCA</span></div><div class="move-preview-line"><span class="seq">A<span class="m3">C</span>BBCA</span></div></td></tr>
+<tr><td class="official-step"><span class="seq">ACBBCA</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Swap one letter on the left with one letter on the right</div><div class="move-preview-line"><span class="seq"><span class="m4">ACB</span>BCA</span></div><div class="move-preview-line"><span class="seq"><span class="m4">BCA</span>BCA</span></div></td></tr>
+<tr><td class="official-step"><span class="seq">BCABCA</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Exchange <span class="string">AB</span> for <span class="string">C</span></div><div class="move-preview-line"><span class="seq">BC<span class="m5">AB</span>CA</span></div><div class="move-preview-line"><span class="seq">BC<span class="m5">C</span>CA</span></div></td></tr>
+<tr><td class="official-step"><span class="seq">BCCCA</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Swap two letters on the left with two letters on the right</div><div class="move-preview-line"><span class="seq"><span class="m6">BCCCA</span></span></div><div class="move-preview-line"><span class="seq"><span class="m6">CACBC</span></span></div></td></tr>
+<tr><td class="official-step"><span class="seq">CACBC</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Exchange <span class="string">C</span> for <span class="string">AB</span></div><div class="move-preview-line"><span class="seq">CACB<span class="m1">C</span></span></div><div class="move-preview-line"><span class="seq">CACB<span class="m1">AB</span></span></div></td></tr>
+<tr><td class="official-step"><span class="seq">CACBAB</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Swap two letters on the left with two letters on the right</div><div class="move-preview-line"><span class="seq"><span class="m2">CACBA</span>B</span></div><div class="move-preview-line"><span class="seq"><span class="m2">BACCA</span>B</span></div></td></tr>
+<tr><td class="official-step"><span class="seq">BACCAB</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Swap two letters on the left with two letters on the right</div><div class="move-preview-line"><span class="seq">B<span class="m3">ACCAB</span></span></div><div class="move-preview-line"><span class="seq">B<span class="m3">ABCAC</span></span></div></td></tr>
+<tr><td class="official-step"><span class="seq">BABCAC</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Exchange <span class="string">AB</span> for <span class="string">C</span></div><div class="move-preview-line"><span class="seq">B<span class="m4">AB</span>CAC</span></div><div class="move-preview-line"><span class="seq">B<span class="m4">C</span>CAC</span></div></td></tr>
+<tr><td class="official-step"><span class="seq">BCCAC</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Swap two letters on the left with two letters on the right</div><div class="move-preview-line"><span class="seq"><span class="m5">BCCAC</span></span></div><div class="move-preview-line"><span class="seq"><span class="m5">ACCBC</span></span></div></td></tr>
+<tr><td class="official-step"><span class="seq">ACCBC</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Swap one letter on the left with one letter on the right</div><div class="move-preview-line"><span class="seq">A<span class="m6">CCB</span>C</span></div><div class="move-preview-line"><span class="seq">A<span class="m6">BCC</span>C</span></div></td></tr>
+<tr><td class="official-step"><span class="seq">ABCCC</span></td><td class="empty-cell"></td></tr>
+<tr><td class="empty-cell"></td><td class="move-card"><div class="move-name">Exchange <span class="string">AB</span> for <span class="string">C</span></div><div class="move-preview-line"><span class="seq"><span class="m1">AB</span>CCC</span></div><div class="move-preview-line"><span class="seq"><span class="m1">C</span>CCC</span></div></td></tr>
+<tr><td class="official-step"><span class="seq">CCCC</span></td><td class="empty-cell"></td></tr>
+</tbody>
+</table>
+<h3>Example 3: Not every puzzle is solvable</h3>
+<table class="solution-path alternating-path">
+<thead>
+<tr><th>Steps</th><th>Transformations</th></tr>
+</thead>
+<tbody>
+<tr>
+<td class="official-step"><span class="seq">ABBA</span></td>
+<td class="empty-cell"></td>
+</tr>
+<tr>
+<td class="empty-cell"></td>
+<td class="move-card"><div class="move-name">Exchange <span class="string">AB</span> for <span class="string">C</span></div><div class="move-preview-line"><span class="seq"><span class="m1">AB</span>BA</span></div><div class="move-preview-line"><span class="seq"><span class="m1">C</span>BA</span></div></td>
+</tr>
+<tr>
+<td class="official-step"><span class="seq">CBA</span></td>
+<td class="empty-cell"></td>
+</tr>
+</tbody>
+</table>
+<p>The string <span class="string">ABBA</span> starts with two <span class="string">A</span>s and two <span class="string">B</span>s, but this route gets stuck at <span class="string">CBA</span>. If you undo the move by changing <span class="string">C</span> back into <span class="string">AB</span>, you are back where you started. This demonstrates why a puzzle can have equal numbers of <span class="string">A</span>s and <span class="string">B</span>s and still not be solvable.</p>
+<h2>4. Practice problems</h2>
+<p>For each starting string below, try to turn the whole string into all <span class="string">C</span>s. Some may not be solvable. Do your best. It is fine to cross out attempts and restart.</p>
+<table>
+<thead>
+<tr><th>#</th><th>Starting string</th><th>Approximate time</th><th>Notes</th></tr>
+</thead>
+<tbody>
+<tr><td>1</td><td><span class="string">AB</span></td><td>1 minute</td><td>Warm-up.</td></tr>
+<tr><td>2</td><td><span class="string">ABAB</span></td><td>2 minutes</td><td>Try to get two <span class="string">C</span>s.</td></tr>
+<tr><td>3</td><td><span class="string">AAABBB</span></td><td>5 minutes</td><td>Use a swap around <span class="string">C</span>.</td></tr>
+<tr><td>4</td><td><span class="string">AABABB</span></td><td>6 minutes</td><td>Look for a useful first <span class="string">AB</span>.</td></tr>
+<tr><td>5</td><td><span class="string">ABBA</span></td><td>3 minutes</td><td>This one is included to remind you that not every puzzle is solvable.</td></tr>
+<tr><td>6</td><td><span class="string">ABAABB</span></td><td>8 minutes</td><td>May require several attempts.</td></tr>
+<tr><td>7</td><td><span class="string">BAABAB</span></td><td>8 minutes</td><td>Do your best; it may or may not be solvable.</td></tr>
+<tr><td>8</td><td><span class="string">AAAABBBB</span></td><td>12 minutes</td><td>Challenge problem for paper.</td></tr>
+</tbody>
+</table>
+<div class="box">
+<strong>Suggested pacing for one hour:</strong> Spend about 10–15 minutes reading the overview and examples. Spend the remaining time trying the practice problems and writing down your strings carefully.
+  </div>
+<h2>5. Final reminder</h2>
+<ul class="todo">
+<li>Write your work on paper.</li>
+<li>It is okay if some attempts do not work.</li>
+<li>Take a clear picture of your written work.</li>
+<li>Email the picture to your instructor.</li>
+</ul>
+<p class="footer-note">This activity is related to algebra because it asks you to follow precise transformation rules. The symbols are simpler than ordinary algebra symbols, but the habit of thinking carefully about allowed moves is very similar.</p>
+</main>
+</body>
+</html>
